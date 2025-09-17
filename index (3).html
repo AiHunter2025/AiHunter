@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Hunter – Can u beat the AI?</title>
+<meta name="description" content="Click the red dot as fast as you can and try to beat the AI. Test your reflexes and reactions in this impossible challenge.">
+
+<style>
+:root {
+  --bg: linear-gradient(135deg, #0f0f3a, #000000);
+  --text: #fff;
+  --card-bg: #111;
+  --border: #fff;
+  --highlight: #ffdd59;
+  --success: #00ff99;
+  --button-bg: #222;
+}
+
+.light-mode {
+  --bg: linear-gradient(135deg, #ffffff, #dcdcdc);
+  --text: #000;
+  --card-bg: #f4f4f4;
+  --border: #000;
+  --highlight: #ff3b3b;
+  --success: #006600;
+  --button-bg: #e0e0e0;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  transition: background 0.5s, color 0.5s;
+}
+
+h1 { text-align: center; font-size: 40px; margin-bottom: 5px; }
+h2 { text-align: center; margin-bottom: 15px; font-weight: 400; color: var(--highlight); }
+p { text-align:center; max-width:700px; margin-bottom:12px; line-height:1.6; }
+
+#theme-toggle {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: var(--button-bg);
+  color: var(--text);
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.3s, color 0.3s;
+}
+
+#rules {
+  max-width: 700px;
+  background: var(--card-bg);
+  padding: 15px;
+  border-radius: 12px;
+  margin: 20px auto;
+  border: 2px solid #0af;
+}
+#rules h3 { text-align:center; color:#0af; margin-bottom:10px; }
+
+#gameArea {
+  width: 90%;
+  max-width: 400px;
+  aspect-ratio: 7 / 10;
+  background: var(--card-bg);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  border: 3px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  margin-bottom:20px;
+}
+
+#dot {
+  width: 8%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  background: red;
+  border-radius: 50%;
+  position: absolute;
+  cursor: pointer;
+  min-width: 25px;
+  min-height: 25px;
+}
+
+#feedback { text-align:center; font-size:18px; margin-top:10px; }
+#highscore { text-align:center; font-size:18px; margin-top:10px; color:#ffd700; font-weight:bold; }
+#scoreMessage { text-align:center; font-size:22px; font-weight:bold; margin-top:15px; color:var(--success); }
+
+button {
+  margin-top: 15px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 12px;
+  background: var(--button-bg);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow:0px 4px 6px rgba(0,0,0,0.3);
+  transition: background 0.3s, color 0.3s;
+}
+#startBtn, #restartBtn { position:relative; display:block; margin:20px auto; font-size:18px;}
+#restartBtn { display:none; background:#0a84ff; color:#fff; }
+
+#startBtn {
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 10px #0af; }
+  50% { transform: scale(1.1); box-shadow: 0 0 20px #0af; }
+  100% { transform: scale(1); box-shadow: 0 0 10px #0af; }
+}
+
+footer { text-align:center; font-size:14px; opacity:0.8; margin-top:40px; }
+#cookie-banner { position: fixed; bottom:0; left:0; right:0; background: rgba(0,0,0,0.9); color:#fff; padding:16px; text-align:center; z-index:9999; }
+#cookie-banner button { margin:0 8px; padding:8px 14px; border:none; border-radius:6px; cursor:pointer; }
+#cookie-accept { background:green; color:#fff; }
+#cookie-decline { background:red; color:#fff; }
+
+#impressum-box {
+  display:none;
+  max-width:700px;
+  margin:10px auto;
+  background:var(--card-bg);
+  padding:0;
+  border-radius:10px;
+  color:var(--text);
+  text-align:center;
+  overflow:hidden;
+  transition:max-height 0.5s, padding 0.5s;
+}
+</style>
+</head>
+<body>
+
+<button id="theme-toggle">🌙</button>
+
+<h1>AI Hunter</h1>
+<h2>Can u beat the AI?</h2>
+
+<div id="rules">
+  <h3>Game Rules</h3>
+  <ul style="text-align:left; max-width:650px; margin:0 auto; line-height:1.6;">
+    <li>Click the red dot as many times as possible within 60 seconds.</li>
+    <li>Each successful click increases your score and makes the dot move faster.</li>
+    <li>If you miss and click outside the dot, your score decreases.</li>
+    <li>After each successful click, the red dot moves faster.</li>
+    <li>Clicking anywhere other than the red dot subtracts one point from your score.</li>
+    <li>If your score drops below -15, the game ends early → <b>AI WINS!</b></li>
+    <li>If your score rises above 15, you win → <b>HUMAN WON!</b></li>
+  </ul>
+</div>
+
+<div id="gameArea">
+  <div id="dot"></div>
+  <button id="startBtn">Start Game</button>
+  <button id="restartBtn">Try Again</button>
+</div>
+
+<p id="feedback">Click the red dot!</p>
+<p id="highscore">Highscore: 0</p>
+<p id="scoreMessage"></p>
+
+<div id="extra-info">
+  <p><b>Note:</b> This game was created with the help of AI technology. It’s designed to challenge your reflexes against unpredictable patterns.</p>
+</div>
+
+<div id="game-text">
+<h3>About AI Hunter</h3>
+<p>AI Hunter is a fast-paced reaction game where your goal is simple: click the moving red dot as many times as possible before time runs out. Sounds easy? Think again – the dot moves unpredictably and gets faster with each successful click, making it nearly impossible to master. Every click requires focus, precision, and lightning-fast reflexes.</p>
+
+<p>The game's design is intentionally challenging. It pushes players to anticipate the dot’s movements, requiring quick thinking and rapid reactions. AI Hunter is not just about speed – it’s about consistency. A single missed click can drastically lower your score, and only the sharpest players can reach high numbers.</p>
+
+<p>Players will notice the red dot often moves in random patterns. There is no fixed route, so memorization alone won’t help. Reflexes, attention, and instinct matter the most. With every successful hit, the dot moves faster, making the game increasingly difficult. This escalation ensures that each session is unique and unpredictable.</p>
+
+<p>AI Hunter is perfect for gamers who love a challenge. It improves hand-eye coordination, sharpens focus, and enhances reaction times. Even casual players can enjoy it, as each game is short, intense, and exciting. Mastering AI Hunter requires dedication and patience.</p>
+
+<p>The game features a simple, elegant interface. No distractions, flashy graphics, or complex controls – just a single red dot to click. This minimalist design ensures players can fully focus on their reflexes and enjoy a pure challenge. Highscores are tracked, encouraging repeat attempts and friendly competition.</p>
+
+<h3>Why AI Hunter is More Than Just a Game</h3>
+<p>AI Hunter is not only an addictive click game – it’s also a powerful tool to improve your reaction speed and hand-eye coordination. Every session challenges your reflexes, helping you think and react faster under pressure.</p>
+
+<p>This makes AI Hunter ideal for a variety of players, including:</p>
+<ul>
+<li>Gamers who want to sharpen their reflexes and improve gameplay.</li>
+<li>Esports athletes who rely on lightning-fast responses.</li>
+<li>Pilots and drone operators who need precise control.</li>
+<li>Medical professionals, like surgeons, who require steady hands and fast decision-making.</li>
+<li>Anyone looking to boost focus, coordination, and reaction time in a fun and engaging way.</li>
+</ul>
+
+<p>By practicing with AI Hunter regularly, players can notice improvements in reaction speed, timing, and precision – all while having a blast chasing the elusive red dot.</p>
+
+<p>Tips for mastering the game:</p>
+<ul>
+<li>Keep your eyes on the dot at all times.</li>
+<li>Stay relaxed but ready to react instantly.</li>
+<li>Don’t panic when the speed increases – focus on rhythm and timing.</li>
+<li>Practice regularly; reflexes improve over time.</li>
+<li>Challenge friends and family to beat your highscore.</li>
+</ul>
+
+<p>The red dot’s behavior is deliberately unpredictable, creating tension and excitement. Each click is a mini victory, each miss a small setback. This combination of challenge and reward keeps players engaged and motivates them to improve. AI Hunter is designed to be simple yet captivating, appealing to a wide audience.</p>
+
+<p>Whether you’re a casual player or a hardcore gamer, AI Hunter offers something unique. The game is quick to pick up, difficult to master, and endlessly entertaining. The satisfaction of clicking the dot at high speeds is unmatched, making every session rewarding.</p>
+
+<p>Remember, every player starts at zero. Highscores provide a measurable goal, encouraging repeat attempts. The more you play, the better your reflexes become. Each session is a new opportunity to improve and beat previous records.</p>
+
+<p>AI Hunter also emphasizes fairness. The game is consistent in its difficulty progression, ensuring that improvement comes from skill rather than chance. Players can track performance and see tangible growth over time.</p>
+
+<p>Overall, AI Hunter is a minimalist, addictive, and highly challenging game. With its focus on reflexes, precision, and timing, it provides endless hours of entertainment. Compete with friends, aim for the top, and test your abilities in this ultimate reaction game.</p>
+
+<p>Game on, and may your clicks be swift and your reflexes sharp!</p>
+</div>
+
+<footer>
+  © 2025 AI Hunter – <a href="#" id="privacy-link">Privacy Policy</a> | 
+  <a href="#" id="impressum-link">Impressum</a>
+</footer>
+
+<div id="impressum-box">
+  <strong>Flo </strong><br>
+  Mai Street - Kosovo<br>
+  Email: <a href="mailto:quantumtap2025@gmail.com" style="color:#0af;">quantumtap2025@gmail.com</a>
+</div>
+
+<div id="cookie-banner">
+  This site uses cookies for Google AdSense. Please choose:
+  <button id="cookie-accept">Accept</button>
+  <button id="cookie-decline">Decline</button>
+</div>
+
+<audio id="clickSound"><source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg"></audio>
+<audio id="failSound"><source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg"></audio>
+<audio id="victorySound"><source src="https://actions.google.com/sounds/v1/cartoon/arcade_game_level_up.ogg" type="audio/ogg"></audio>
+
+<script>
+const gameArea = document.getElementById('gameArea');
+const dot = document.getElementById('dot');
+const feedback = document.getElementById('feedback');
+const highscoreEl = document.getElementById('highscore');
+const scoreMessage = document.getElementById('scoreMessage');
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+const clickSound = document.getElementById('clickSound');
+const failSound = document.getElementById('failSound');
+const victorySound = document.getElementById('victorySound');
+
+let score=0, highscore=0, speed=1500, gameActive=false, gameInterval, gameTimeout;
+
+function moveDot() {
+  const maxX = gameArea.clientWidth - dot.clientWidth;
+  const maxY = gameArea.clientHeight - dot.clientHeight;
+  const x = Math.random() * maxX;
+  const y = Math.random() * maxY;
+  dot.style.left = x + 'px';
+  dot.style.top = y + 'px';
+}
+
+function updateHighscore() {
+  if(score > highscore) highscore = score;
+  highscoreEl.textContent = "Highscore: " + highscore;
+}
+
+function endGame(customMessage="", sound=null) {
+  gameActive=false;
+  clearInterval(gameInterval);
+  clearTimeout(gameTimeout);
+  startBtn.style.display="none";
+  restartBtn.style.display="block";
+  feedback.textContent = "Game Over! Your score: " + score;
+  updateHighscore();
+
+  if(customMessage){
+    scoreMessage.textContent = customMessage;
+    if(sound){ sound.play(); }
+    return;
+  }
+
+  if(score < 0) {
+    scoreMessage.textContent = "You failed!";
+    failSound.play();
+  } else if(score > 0) {
+    scoreMessage.textContent = "Victory! Well done!";
+    victorySound.play();
+  } else {
+    scoreMessage.textContent = "Good try!";
+  }
+}
+
+function startGame() {
+  score=0;
+  speed=1500;
+  gameActive=true;
+  startBtn.style.display="none";
+  restartBtn.style.display="none";
+  feedback.textContent = "Click the red dot!";
+  scoreMessage.textContent = "";
+  updateHighscore();
+  moveDot();
+
+  gameInterval = setInterval(()=>{
+    if(!gameActive) return;
+    feedback.textContent = "Score: " + score;
+    moveDot();
+  }, speed);
+
+  gameTimeout = setTimeout(()=>{ 
+    if(score > 15){
+      endGame("HUMAN WON!", victorySound);
+    } else if(score < -15){
+      endGame("AI WINS!", failSound);
+    } else {
+      endGame();
+    }
+  }, 60000);
+}
+
+dot.addEventListener('click', ()=>{
+  if(!gameActive) return;
+  score++;
+  clickSound.play();
+  feedback.textContent = "Good! Score: " + score;
+  speed *= 0.93;
+  clearInterval(gameInterval);
+  gameInterval = setInterval(()=>{
+    if(!gameActive) return;
+    feedback.textContent = "Score: " + score;
+    moveDot();
+  }, speed);
+  moveDot();
+
+  if(score > 15){
+    endGame("HUMAN WON!", victorySound);
+  }
+});
+
+gameArea.addEventListener('click', (e)=>{
+  if(!gameActive) return;
+  if(e.target !== dot){
+    score--;
+    feedback.textContent = "Missed! Score: " + score;
+    updateHighscore();
+    if(score < -15){
+      endGame("AI WINS!", failSound);
+    }
+  }
+});
+
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
+
+const cookieBanner=document.getElementById('cookie-banner');
+document.getElementById('cookie-accept').onclick=()=>{
+  cookieBanner.style.display="none";
+  localStorage.setItem('cookie-consent','accepted');
+};
+document.getElementById('cookie-decline').onclick=()=>{
+  cookieBanner.style.display="none";
+  localStorage.setItem('cookie-consent','declined');
+};
+if(localStorage.getItem('cookie-consent')) cookieBanner.style.display="none";
+
+const impressumLink = document.getElementById('impressum-link');
+const impressumBox = document.getElementById('impressum-box');
+impressumLink.addEventListener('click', (e)=>{
+  e.preventDefault();
+  if(impressumBox.style.display === 'none'){
+    impressumBox.style.display = 'block';
+    impressumBox.style.maxHeight = '500px';
+    impressumBox.style.padding = '15px';
+  } else {
+    impressumBox.style.maxHeight = '0';
+    impressumBox.style.padding = '0';
+    setTimeout(()=>{ impressumBox.style.display = 'none'; }, 500);
+  }
+});
+
+// THEME TOGGLE
+const themeToggle = document.getElementById('theme-toggle');
+function applyTheme(theme) {
+  if(theme === 'light'){
+    document.body.classList.add('light-mode');
+    themeToggle.textContent = "☀️";
+  } else {
+    document.body.classList.remove('light-mode');
+    themeToggle.textContent = "🌙";
+  }
+}
+themeToggle.addEventListener('click', ()=>{
+  const newTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+  localStorage.setItem('theme', newTheme);
+  applyTheme(newTheme);
+});
+applyTheme(localStorage.getItem('theme') || 'dark');
+</script>
+
+</body>
+</html>
